@@ -101,8 +101,48 @@
 
 		<!--Divider-->
 		<hr class="border-b-2 border-gray-400 mb-8 mx-4">
+     <h3>Comments</h3>
+		{% for comment in comments %}
+		    <p>
+				<strong>{{ comment.user.username }}</strong><br>
+				{{ comment.content }}<br>
+				<small>{{ comment.created_at }}</small>
+			</p>
+		{% empty %}
+		    <p> Hele comment yoxdur</p>
+		{% endfor %}
 
-	
+        {% if user.is_authenticated %}
+		    <form method = "post">
+				{% csrf_token %}
+				<textarea name = "content" required placeholder="fikrinizi yazin"></textarea><br>
+				<button type = "submit"> Gonder</button>
+
+			</form>
+		{% else %}
+		         <p> Comment yazmaq ucun login olun</p>
+		{% endif %}
+<div class="flex gap-4 mt-4">
+
+{% if user.is_authenticated %}
+    <form method="POST" action="{% url 'like-post' post.slug %}">
+        {% csrf_token %}
+        <button type="submit">
+            ❤️ Like ({{ post.likes.count }})
+        </button>
+    </form>
+
+    <form method="POST" action="{% url 'favorite-post' post.slug %}">
+        {% csrf_token %}
+        <button type="submit">
+            ⭐ Favorite ({{ post.favorites.count }})
+        </button>
+    </form>
+{% else %}
+    <p>Like və Favorite üçün login olun</p>
+{% endif %}
+
+</div>
 
 	</div>
 	<!--/container-->

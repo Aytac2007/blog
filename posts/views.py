@@ -1,6 +1,9 @@
 from django.shortcuts import render
 from django.db.models import Q 
-from .models import Category, Post, Author
+from .models import Category, Post, Author, Comment,Like, Favorite
+from django.shortcuts import redirect
+
+
 
 def get_author(user):
     qs = Author.objects.filter(user=user)
@@ -9,7 +12,7 @@ def get_author(user):
     return None
 
 def homepage (request):
-    categories = Category.objects.all()[0:3]
+    categories = Category.objects.all()[0:4]
     featured = Post.objects.filter(featured=True)
     latest = Post.objects.order_by('-timestamp')[0:3]
     context= {
@@ -22,11 +25,54 @@ def homepage (request):
 def post (request,slug):
     post = Post.objects.get(slug = slug)
     latest = Post.objects.order_by('-timestamp')[:3]
+    comments = post.comments.filter(active=True)
+    if request.method == 'POST' : 
+        if request.user.is_authenticated:
+            content= request.POST.get('content')
+            if content:
+                Comment.objects.create(
+                    post=post,
+                    user=request.user,
+                    content=content
+                )
+
+
     context = {
         'post': post,
         'latest': latest,
-    }
+        'comments': comments
+                      }
     return render(request, 'post.html', context)
+
+def like_post(request, slug):
+    post = Post.objects.get(slug=slug)
+
+    if request.user.is_authenticated:
+        like, created = Like.objects.get_or_create(
+            post=post,
+            user=request.user
+        )
+
+        if not created:
+            like.delete()
+
+    return redirect('post', slug=slug)
+
+
+def favorite_post(request, slug):
+    post = Post.objects.get(slug=slug)
+
+    if request.user.is_authenticated:
+        fav, created = Favorite.objects.get_or_create(
+            post=post,
+            user=request.user
+        )
+
+        if not created:
+            fav.delete()
+
+    return redirect('post', slug=slug)
+
 
 def about (request):
     return render(request, 'about_page.html')
